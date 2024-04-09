@@ -20,7 +20,7 @@ public class GeneralChecks
         foreach (var i in GetConflicts(filePath)) Assert.Fail($"{i.trace}: {i.description}");
     }
 
-    public IEnumerable<ReportedIssue> GetConflicts(string filePath)
+    public static IEnumerable<ReportedIssue> GetConflicts(string filePath)
     {
         string[] lines = File.ReadAllLines(filePath);
         for (int i = 0; i < lines.Length; i++)
