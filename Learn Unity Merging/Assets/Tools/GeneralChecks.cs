@@ -4,25 +4,32 @@ using UnityEngine;
 using NUnit.Framework;
 using UnityEditor;
 using System.IO;
+using System.Linq;
 
 public class GeneralChecks
 {
     [Test]
     public void AllFilesMerged()
     {
-        foreach (SceneAsset scene in Resources.FindObjectsOfTypeAll<SceneAsset>()) _CheckConflicts(AssetDatabase.GetAssetPath(scene));
-        foreach (string prefabGUID in AssetDatabase.FindAssets("t:prefab")) _CheckConflicts(AssetDatabase.GUIDToAssetPath(prefabGUID));
+        foreach (string guid in AssetDatabase.FindAssets("t:scene" )) _CheckConflicts(AssetDatabase.GUIDToAssetPath(guid));
+        foreach (string guid in AssetDatabase.FindAssets("t:prefab")) _CheckConflicts(AssetDatabase.GUIDToAssetPath(guid));
     }
 
     void _CheckConflicts(string filePath)
     {
+        foreach (var i in GetConflicts(filePath)) Assert.Fail($"{i.trace}: {i.description}");
+    }
+
+    public IEnumerable<ReportedIssue> GetConflicts(string filePath)
+    {
         string[] lines = File.ReadAllLines(filePath);
         for (int i = 0; i < lines.Length; i++)
         {
-            if (lines[i].StartsWith("<<<<") || lines[i].StartsWith("====") || lines[i].StartsWith(">>>>"))
+            if (CONFLICT_MARKERS.Any(m => lines[i].StartsWith(m)))
             {
-                Assert.Fail($"Conflict marker on line {i+1}");
+                yield return new ReportedIssue(filePath, $"Conflict marker on line {i+1}");
             }
         }
     }
+    private static readonly string[] CONFLICT_MARKERS = { "<<<<", "====", "||||", ">>>>" };
 }
