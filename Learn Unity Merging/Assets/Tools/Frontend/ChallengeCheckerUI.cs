@@ -8,7 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class VerificationFrontend : EditorWindow
+public class ChallengeCheckerUI : EditorWindow
 {
     [InitializeOnLoadMethod]
     [MenuItem("Learn Unity Merging/Refresh list", priority = 201)]
@@ -26,7 +26,7 @@ public class VerificationFrontend : EditorWindow
         foreach (ChallengeDefinition i in challenges)
         {
             AddMenuItem(i.MenuPath, null, false, 101,
-                () => CreateWindow<VerificationFrontend>().Init(i),
+                () => CreateWindow<ChallengeCheckerUI>().Init(i),
                 () => true
             );
             menuItems.Add(i.MenuPath);
@@ -111,94 +111,36 @@ public class VerificationFrontend : EditorWindow
     {
         SetMessages(MSG_CANNOT_EVALUATE);
 
+        using ProgressBarGuard pbg = new ProgressBarGuard();
+
         List<ReportedIssue> issues = new List<ReportedIssue>();
-        foreach (string guid in AssetDatabase.FindAssets("t:scene" )) issues.AddRange(GeneralChecks.GetConflicts(AssetDatabase.GUIDToAssetPath(guid)));
-        foreach (string guid in AssetDatabase.FindAssets("t:prefab")) issues.AddRange(GeneralChecks.GetConflicts(AssetDatabase.GUIDToAssetPath(guid)));
+        ExecTests_CheckForConflicts("t:prefab", issues, "(1/4) Checking prefabs for conflicts...", 0.0f, 0.25f);
+        ExecTests_CheckForConflicts("t:scene" , issues, "(2/4) Checking scenes for conflicts..." , 0.25f, 0.5f);
         conflictMarkers.Write(issues);
+
         if (conflictMarkers.IssueCount != 0) return;
 
+        EditorUtility.DisplayProgressBar("Checking challenge", "(3/4) Scanning scenes for content... {path}", 0.6f);
         issues.Clear();
         //TODO implement
         objectPresenceIssues.Write(issues);
         
+        EditorUtility.DisplayProgressBar("Checking challenge", "(4/4) Scanning scenes for content... {path}", 0.8f);
         issues.Clear();
         //TODO implement
         contentManglingIssues.Write(issues);
     }
 
-    class IssueList : VisualElement
+    private void ExecTests_CheckForConflicts(string filter, List<ReportedIssue> issues_out, string progressPrefix, float progressRangeBase, float progressRangeMax)
     {
-        public IssueList() { }
-
-        private Dictionary<string, IssueGroup> groups = new Dictionary<string, IssueGroup>();
-
-        public int IssueCount => groups.Count;
-
-        public void SetMessage(string msg)
+        EditorUtility.DisplayProgressBar("Checking challenge", $"{progressPrefix} - looking for files...", progressRangeBase);
+        string[] guids = AssetDatabase.FindAssets(filter);
+        float progressPerItem = guids.Length/(progressRangeMax-progressRangeBase);
+        for (int i = 0; i < guids.Length; ++i)
         {
-            Clear();
-            
-            Label lbl = new Label(msg);
-            lbl.style.unityFontStyleAndWeight = FontStyle.Italic;
-            Add(lbl);
-        }
-
-        public void Write(IEnumerable<ReportedIssue> issues)
-        {
-            Clear();
-            groups.Clear();
-
-            foreach (ReportedIssue i in issues) AddIssue(i);
-
-            if (IssueCount == 0) SetMessage("No issues detected");
-        }
-
-        private void AddIssue(ReportedIssue issue)
-        {
-            IssueGroup group;
-            if (!groups.TryGetValue(issue.trace, out group))
-            {
-                group = new IssueGroup(issue.trace);
-                groups[issue.trace] = group;
-                Add(group);
-            }
-
-            group.AddIssue(issue);
-        }
-    }
-
-    class IssueGroup : VisualElement
-    {
-        public string Trace { get; private set; }
-        public IssueGroup(string trace)
-        {
-            this.Trace = trace;
-
-            foldout = new Foldout();
-            foldout.text = trace;
-            foldout.contentContainer.style.paddingLeft = 20;
-            Add(foldout);
-
-            if (File.Exists(trace))
-            {
-                Button revealBtn = new Button(Reveal);
-                revealBtn.Add(new Label("Reveal"));
-                foldout.Add(revealBtn);
-            }
-        }
-
-        Foldout foldout;
-
-        public void AddIssue(ReportedIssue issue)
-        {
-            Label descLabel = new Label(issue.description);
-            descLabel.style.flexGrow = 3;
-            foldout.Add(descLabel);
-        }
-
-        public void Reveal()
-        {
-            EditorUtility.RevealInFinder(Trace);
+            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            EditorUtility.DisplayProgressBar("Checking challenge", $"{progressPrefix} - {path}", progressRangeBase+i*progressPerItem);
+            issues_out.AddRange(GeneralChecks.GetConflicts(path));
         }
     }
 }
