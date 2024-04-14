@@ -6,7 +6,7 @@ struct ProgressBarGroup
 {
     private float minProgress, maxProgress;
     private int currentTaskId;
-    private int taskCount;
+    public int taskCount;
     public string title;
     public string prefix;
     public ProgressBarGroup(int taskCount, string title)

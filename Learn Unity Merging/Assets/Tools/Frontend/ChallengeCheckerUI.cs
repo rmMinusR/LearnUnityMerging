@@ -135,15 +135,23 @@ public class ChallengeCheckerUI : EditorWindow
             if (conflictMarkers.IssueCount != 0) return;
         }
 
-        //All content that should be present is present (and all that shouldn't, isn't)
+        //Check content IDs
         {
-            ProgressBarGroup contentTaskMonitor = testTaskMonitor.Subtask(challenge.assetContentConstraints.Length, "Scanning content for presence...");
+            //All GUIDs that should be present are present (and all that shouldn't, isn't)
             issues.Clear();
+
+            ExecTests_CheckGUIDs(challenge.GuidsRequired.ToList(), challenge.GuidsBanned.ToList(), issues, testTaskMonitor.Subtask(1, "Scanning for mismatched files..."));
+            objectPresenceIssues.Write(issues);
+
+            //All local file content that should be present is present (and all that shouldn't, isn't)
+
+            ProgressBarGroup contentTaskMonitor = testTaskMonitor.Subtask(challenge.assetContentConstraints.Length, "Scanning for local file content for mismatches...");
             foreach (AssetContentConstraint c in challenge.assetContentConstraints)
             {
                 contentTaskMonitor.MarkDone(AssetDatabase.GetAssetPath(c.Asset));
                 issues.AddRange(c.Evaluate());
             }
+
             objectPresenceIssues.Write(issues);
         }
 
@@ -170,6 +178,25 @@ public class ChallengeCheckerUI : EditorWindow
         {
             taskMonitor.MarkDone(paths[i]);
             issues_out.AddRange(GeneralChecks.GetConflicts(paths[i]));
+        }
+    }
+
+    private static void ExecTests_CheckGUIDs(IReadOnlyList<string> required, IReadOnlyList<string> banned, List<ReportedIssue> issues_out, ProgressBarGroup taskMonitor)
+    {
+        taskMonitor.taskCount = required.Count + banned.Count;
+
+        foreach (string i in required)
+        {
+            taskMonitor.MarkDone(i);
+            string assetPath = AssetDatabase.GUIDToAssetPath(i);
+            if (assetPath.Length == 0) issues_out.Add(new ReportedIssue("GUIDs", $"Deleted, but should exist: {i}"));
+        }
+
+        foreach (string i in banned)
+        {
+            taskMonitor.MarkDone(i);
+            string assetPath = AssetDatabase.GUIDToAssetPath(i);
+            if (assetPath.Length != 0) issues_out.Add(new ReportedIssue("GUIDs", $"{assetPath} was deleted on one branch, but still exists"));
         }
     }
 }
