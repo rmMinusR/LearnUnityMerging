@@ -47,17 +47,26 @@ public class VerificationFrontend : EditorWindow
     }
 
 
-    ChallengeDefinition challenge;
+    [SerializeField] ChallengeDefinition challenge;
     private void Init(ChallengeDefinition challenge)
     {
         this.challenge = challenge;
         titleContent = new GUIContent("Challenge checker");
 
-        VisualElement root = rootVisualElement;
+        CreateGUI();
 
-        Label title = new Label($"Verify challenge: {challenge.displayName}");
-        title.style.unityFontStyleAndWeight = FontStyle.Bold;
-        root.Add(title);
+        ExecTests();
+    }
+
+    private void CreateGUI()
+    {
+        VisualElement root = rootVisualElement;
+        if (root.childCount > 0) return;
+
+        titleLbl = new Label();
+        if (challenge != null) titleLbl.text = $"Verify challenge: {challenge.displayName}";
+        titleLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
+        root.Add(titleLbl);
 
         Button btnCheck = new Button(ExecTests);
         btnCheck.Add(new Label("Re-check"));
@@ -81,24 +90,37 @@ public class VerificationFrontend : EditorWindow
         root.Add(contentManglingLbl);
         root.Add(contentManglingIssues = new IssueList());
 
-        ExecTests();
+        SetMessages(MSG_NOT_YET_EVALUATED);
     }
 
+    Label titleLbl;
     IssueList conflictMarkers;
     IssueList objectPresenceIssues;
     IssueList contentManglingIssues;
 
+    private static readonly string MSG_NOT_YET_EVALUATED= "No data. Press the Re-check button!";
+    private static readonly string MSG_CANNOT_EVALUATE = "Cannot check. Fix other issues first.";
+    private void SetMessages(string msg)
+    {   
+        conflictMarkers      .SetMessage(msg);
+        objectPresenceIssues .SetMessage(msg);
+        contentManglingIssues.SetMessage(msg);
+    }
+
     private void ExecTests()
     {
+        SetMessages(MSG_CANNOT_EVALUATE);
+
         List<ReportedIssue> issues = new List<ReportedIssue>();
         foreach (string guid in AssetDatabase.FindAssets("t:scene" )) issues.AddRange(GeneralChecks.GetConflicts(AssetDatabase.GUIDToAssetPath(guid)));
         foreach (string guid in AssetDatabase.FindAssets("t:prefab")) issues.AddRange(GeneralChecks.GetConflicts(AssetDatabase.GUIDToAssetPath(guid)));
         conflictMarkers.Write(issues);
+        if (conflictMarkers.IssueCount != 0) return;
 
         issues.Clear();
         //TODO implement
         objectPresenceIssues.Write(issues);
-
+        
         issues.Clear();
         //TODO implement
         contentManglingIssues.Write(issues);
@@ -110,18 +132,25 @@ public class VerificationFrontend : EditorWindow
 
         private Dictionary<string, IssueGroup> groups = new Dictionary<string, IssueGroup>();
 
+        public int IssueCount => groups.Count;
+
+        public void SetMessage(string msg)
+        {
+            Clear();
+            
+            Label lbl = new Label(msg);
+            lbl.style.unityFontStyleAndWeight = FontStyle.Italic;
+            Add(lbl);
+        }
+
         public void Write(IEnumerable<ReportedIssue> issues)
         {
             Clear();
+            groups.Clear();
 
             foreach (ReportedIssue i in issues) AddIssue(i);
-            
-            if (childCount == 0)
-            {
-                Label lbl = new Label("No issues detected");
-                lbl.style.unityFontStyleAndWeight = FontStyle.Italic;
-                Add(lbl);
-            }
+
+            if (IssueCount == 0) SetMessage("No issues detected");
         }
 
         private void AddIssue(ReportedIssue issue)
