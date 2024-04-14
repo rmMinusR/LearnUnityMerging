@@ -9,6 +9,8 @@ public class AssetContentConstraint
     [SerializeField] [TextArea] private string idsRequired; //Newline-separated list: These must show up
     [SerializeField] [TextArea] private string idsBanned; //Newline-separated list: These must not show up
 
+    public UnityEngine.Object Asset => asset;
+
     public List<ReportedIssue> Evaluate()
     {
         List<ReportedIssue> @out = new List<ReportedIssue>();

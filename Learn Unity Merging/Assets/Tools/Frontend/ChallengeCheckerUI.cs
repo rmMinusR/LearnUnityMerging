@@ -116,30 +116,44 @@ public class ChallengeCheckerUI : EditorWindow
     {
         List<string> prefabs = GetFilesByFilter("t:prefab").ToList();
         List<string> scenes  = GetFilesByFilter("t:scene" ).ToList();
+        List<string> allManaged = new List<string>(); allManaged.AddRange(prefabs); allManaged.AddRange(scenes);
 
         SetMessages(MSG_CANNOT_EVALUATE);
         using ProgressBarGuard pbg = new ProgressBarGuard();
+        List<ReportedIssue> issues = new List<ReportedIssue>();
+
+        ProgressBarGroup testTaskMonitor = new ProgressBarGroup(4, "Checking challenge");
 
         //Scan for conflict markers
-        List<ReportedIssue> issues = new List<ReportedIssue>();
-        ExecTests_CheckForConflicts(prefabs, issues, "(1/4) Checking prefabs for conflicts...", 0.0f, 0.25f);
-        ExecTests_CheckForConflicts(scenes , issues, "(2/4) Checking scenes for conflicts..." , 0.25f, 0.5f);
-        conflictMarkers.Write(issues);
+        {
+            issues.Clear();
+            ExecTests_CheckForConflicts(prefabs, issues, testTaskMonitor.Subtask(prefabs.Count, "Checking prefabs for conflicts"));
+            ExecTests_CheckForConflicts(scenes , issues, testTaskMonitor.Subtask(scenes .Count, "Checking scenes for conflicts" ));
+            conflictMarkers.Write(issues);
 
-        //Don't go further if we have conflicts in files -- we'll prob just feed bad information to the user
-        if (conflictMarkers.IssueCount != 0) return;
+            //Don't go further if we have conflicts in files -- we'll prob just feed bad information to the user
+            if (conflictMarkers.IssueCount != 0) return;
+        }
 
         //All content that should be present is present (and all that shouldn't, isn't)
-        EditorUtility.DisplayProgressBar("Checking challenge", "(3/4) Scanning content for presence... {path}", 0.6f);
-        issues.Clear();
-        //TODO implement
-        objectPresenceIssues.Write(issues);
-        
+        {
+            ProgressBarGroup contentTaskMonitor = testTaskMonitor.Subtask(challenge.assetContentConstraints.Length, "Scanning content for presence...");
+            issues.Clear();
+            foreach (AssetContentConstraint c in challenge.assetContentConstraints)
+            {
+                contentTaskMonitor.MarkDone(AssetDatabase.GetAssetPath(c.Asset));
+                issues.AddRange(c.Evaluate());
+            }
+            objectPresenceIssues.Write(issues);
+        }
+
         //All fields expected on the given object are present
-        EditorUtility.DisplayProgressBar("Checking challenge", "(4/4) Scanning content for mangling... {path}", 0.8f);
-        issues.Clear();
-        //TODO implement
-        contentManglingIssues.Write(issues);
+        {
+            ProgressBarGroup contentTaskMonitor = testTaskMonitor.Subtask(1, "Scanning content for mangling...");
+            issues.Clear();
+            //TODO implement
+            contentManglingIssues.Write(issues);
+        }
     }
 
     private static IEnumerable<string> GetFilesByFilter(string filter)
@@ -150,15 +164,11 @@ public class ChallengeCheckerUI : EditorWindow
         }
     }
 
-    private static void ExecTests_CheckForConflicts(IReadOnlyList<string> paths, List<ReportedIssue> issues_out, string progressPrefix, float progressRangeBase, float progressRangeMax)
+    private static void ExecTests_CheckForConflicts(IReadOnlyList<string> paths, List<ReportedIssue> issues_out, ProgressBarGroup taskMonitor)
     {
-        float progressPerItem = paths.Count/(progressRangeMax-progressRangeBase);
-        EditorUtility.DisplayProgressBar("Checking challenge", $"{progressPrefix} - looking for files...", progressRangeBase);
-
         for (int i = 0; i < paths.Count; ++i)
         {
-            EditorUtility.DisplayProgressBar("Checking challenge", $"{progressPrefix} - {paths[i]}", progressRangeBase+i*progressPerItem);
-
+            taskMonitor.MarkDone(paths[i]);
             issues_out.AddRange(GeneralChecks.GetConflicts(paths[i]));
         }
     }
