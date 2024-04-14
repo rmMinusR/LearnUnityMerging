@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -63,15 +64,29 @@ public class VerificationFrontend : EditorWindow
         root.Add(btnCheck);
 
         Label conflictMarkersLbl = new Label("Conflicts:");
+        conflictMarkersLbl.style.paddingTop = 20;
         conflictMarkersLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
         root.Add(conflictMarkersLbl);
-
         root.Add(conflictMarkers = new IssueList());
-        
+
+        Label objectPresenceLbl = new Label("Object presence:");
+        objectPresenceLbl.style.paddingTop = 20;
+        objectPresenceLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
+        root.Add(objectPresenceLbl);
+        root.Add(objectPresenceIssues = new IssueList());
+
+        Label contentManglingLbl = new Label("Content mangling:");
+        contentManglingLbl.style.paddingTop = 20;
+        contentManglingLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
+        root.Add(contentManglingLbl);
+        root.Add(contentManglingIssues = new IssueList());
+
         ExecTests();
     }
 
     IssueList conflictMarkers;
+    IssueList objectPresenceIssues;
+    IssueList contentManglingIssues;
 
     private void ExecTests()
     {
@@ -79,6 +94,14 @@ public class VerificationFrontend : EditorWindow
         foreach (string guid in AssetDatabase.FindAssets("t:scene" )) issues.AddRange(GeneralChecks.GetConflicts(AssetDatabase.GUIDToAssetPath(guid)));
         foreach (string guid in AssetDatabase.FindAssets("t:prefab")) issues.AddRange(GeneralChecks.GetConflicts(AssetDatabase.GUIDToAssetPath(guid)));
         conflictMarkers.Write(issues);
+
+        issues.Clear();
+        //TODO implement
+        objectPresenceIssues.Write(issues);
+
+        issues.Clear();
+        //TODO implement
+        contentManglingIssues.Write(issues);
     }
 
     class IssueList : VisualElement
@@ -121,10 +144,18 @@ public class VerificationFrontend : EditorWindow
         public IssueGroup(string trace)
         {
             this.Trace = trace;
+
             foldout = new Foldout();
             foldout.text = trace;
             foldout.contentContainer.style.paddingLeft = 20;
             Add(foldout);
+
+            if (File.Exists(trace))
+            {
+                Button revealBtn = new Button(Reveal);
+                revealBtn.Add(new Label("Reveal"));
+                foldout.Add(revealBtn);
+            }
         }
 
         Foldout foldout;
@@ -134,6 +165,11 @@ public class VerificationFrontend : EditorWindow
             Label descLabel = new Label(issue.description);
             descLabel.style.flexGrow = 3;
             foldout.Add(descLabel);
+        }
+
+        public void Reveal()
+        {
+            EditorUtility.RevealInFinder(Trace);
         }
     }
 }
