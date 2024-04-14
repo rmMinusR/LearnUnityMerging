@@ -1,5 +1,6 @@
 using System.IO;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 internal class IssueGroup : VisualElement
@@ -16,9 +17,17 @@ internal class IssueGroup : VisualElement
 
         if (File.Exists(trace))
         {
-            Button revealBtn = new Button(Reveal);
-            revealBtn.Add(new Label("Reveal"));
-            foldout.Add(revealBtn);
+            VisualElement row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            foldout.Add(row);
+
+            Button unityRevealBtn = new Button(RevealInUnity);
+            unityRevealBtn.Add(new Label("Show in Unity"));
+            row.Add(unityRevealBtn);
+
+            Button nativeRevealBtn = new Button(RevealNative);
+            nativeRevealBtn.Add(new Label("Show in folder"));
+            row.Add(nativeRevealBtn);
         }
     }
 
@@ -31,8 +40,13 @@ internal class IssueGroup : VisualElement
         foldout.Add(descLabel);
     }
 
-    public void Reveal()
+    public void RevealNative()
     {
         EditorUtility.RevealInFinder(Trace);
+    }
+
+    public void RevealInUnity()
+    {
+        EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<Object>(Trace));
     }
 }
