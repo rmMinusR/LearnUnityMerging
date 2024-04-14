@@ -16,8 +16,7 @@ public class AssetContentConstraint
     public List<ReportedIssue> Evaluate()
     {
         string assetPath = AssetDatabase.GetAssetPath(asset);
-        string[] lines = System.IO.File.ReadAllLines(assetPath);
-        string[] ids = lines.Where(i => i.StartsWith("--- !u!")).Select(i => i.Split("&")[1]).ToArray();
+        string[] ids = Utils.ListLocalIDs(assetPath).ToArray();
         
         List<ReportedIssue> @out = new List<ReportedIssue>();
         foreach (string id in localIdsBanned  .SplitList().Intersect(ids)) @out.Add(new ReportedIssue(assetPath, $"Object {id} exists, but was deleted on one branch"));

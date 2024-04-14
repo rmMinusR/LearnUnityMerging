@@ -157,9 +157,10 @@ public class ChallengeCheckerUI : EditorWindow
 
         //All fields expected on the given object are present
         {
-            ProgressBarGroup contentTaskMonitor = testTaskMonitor.Subtask(1, "Scanning content for mangling...");
+            ProgressBarGroup contentTaskMonitor = testTaskMonitor.Subtask(prefabs.Count+scenes.Count, "Scanning content for mangling...");
             issues.Clear();
-            //TODO implement
+            foreach (string i in prefabs) ExecTests_CheckMangling(i, issues, ref contentTaskMonitor);
+            foreach (string i in scenes ) ExecTests_CheckMangling(i, issues, ref contentTaskMonitor);
             contentManglingIssues.Write(issues);
         }
     }
@@ -197,6 +198,17 @@ public class ChallengeCheckerUI : EditorWindow
             taskMonitor.MarkDone(i);
             string assetPath = AssetDatabase.GUIDToAssetPath(i);
             if (assetPath.Length != 0) issues_out.Add(new ReportedIssue("GUIDs", $"{assetPath} was deleted on one branch, but still exists"));
+        }
+    }
+
+    private static void ExecTests_CheckMangling(string path, List<ReportedIssue> issues_out, ref ProgressBarGroup taskMonitor)
+    {
+        List<ObjectBlock> rawObjects = Utils.GetRawObjects(path).ToList();
+        taskMonitor.taskCount = rawObjects.Count;
+        foreach (ObjectBlock obj in rawObjects)
+        {
+            taskMonitor.MarkDone(obj.id);
+            //TODO implement
         }
     }
 }
