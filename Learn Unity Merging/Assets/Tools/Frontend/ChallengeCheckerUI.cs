@@ -10,6 +10,8 @@ using UnityEngine.UIElements;
 
 public class ChallengeCheckerUI : EditorWindow
 {
+    #region Opening checker
+
     [InitializeOnLoadMethod]
     [MenuItem("Learn Unity Merging/Refresh list", priority = 201)]
     static void RefreshList()
@@ -58,13 +60,16 @@ public class ChallengeCheckerUI : EditorWindow
         ExecTests();
     }
 
+    #endregion
+
     private void CreateGUI()
     {
+        if (challenge != null && titleLbl != null) titleLbl.text = $"Verify challenge: {challenge.displayName}";
+
         VisualElement root = rootVisualElement;
         if (root.childCount > 0) return;
 
         titleLbl = new Label();
-        if (challenge != null) titleLbl.text = $"Verify challenge: {challenge.displayName}";
         titleLbl.style.unityFontStyleAndWeight = FontStyle.Bold;
         root.Add(titleLbl);
 
@@ -109,38 +114,52 @@ public class ChallengeCheckerUI : EditorWindow
 
     private void ExecTests()
     {
-        SetMessages(MSG_CANNOT_EVALUATE);
+        List<string> prefabs = GetFilesByFilter("t:prefab").ToList();
+        List<string> scenes  = GetFilesByFilter("t:scene" ).ToList();
 
+        SetMessages(MSG_CANNOT_EVALUATE);
         using ProgressBarGuard pbg = new ProgressBarGuard();
 
+        //Scan for conflict markers
         List<ReportedIssue> issues = new List<ReportedIssue>();
-        ExecTests_CheckForConflicts("t:prefab", issues, "(1/4) Checking prefabs for conflicts...", 0.0f, 0.25f);
-        ExecTests_CheckForConflicts("t:scene" , issues, "(2/4) Checking scenes for conflicts..." , 0.25f, 0.5f);
+        ExecTests_CheckForConflicts(prefabs, issues, "(1/4) Checking prefabs for conflicts...", 0.0f, 0.25f);
+        ExecTests_CheckForConflicts(scenes , issues, "(2/4) Checking scenes for conflicts..." , 0.25f, 0.5f);
         conflictMarkers.Write(issues);
 
+        //Don't go further if we have conflicts in files -- we'll prob just feed bad information to the user
         if (conflictMarkers.IssueCount != 0) return;
 
-        EditorUtility.DisplayProgressBar("Checking challenge", "(3/4) Scanning scenes for content... {path}", 0.6f);
+        //All content that should be present is present (and all that shouldn't, isn't)
+        EditorUtility.DisplayProgressBar("Checking challenge", "(3/4) Scanning content for presence... {path}", 0.6f);
         issues.Clear();
         //TODO implement
         objectPresenceIssues.Write(issues);
         
-        EditorUtility.DisplayProgressBar("Checking challenge", "(4/4) Scanning scenes for content... {path}", 0.8f);
+        //All fields expected on the given object are present
+        EditorUtility.DisplayProgressBar("Checking challenge", "(4/4) Scanning content for mangling... {path}", 0.8f);
         issues.Clear();
         //TODO implement
         contentManglingIssues.Write(issues);
     }
 
-    private void ExecTests_CheckForConflicts(string filter, List<ReportedIssue> issues_out, string progressPrefix, float progressRangeBase, float progressRangeMax)
+    private static IEnumerable<string> GetFilesByFilter(string filter)
     {
-        EditorUtility.DisplayProgressBar("Checking challenge", $"{progressPrefix} - looking for files...", progressRangeBase);
-        string[] guids = AssetDatabase.FindAssets(filter);
-        float progressPerItem = guids.Length/(progressRangeMax-progressRangeBase);
-        for (int i = 0; i < guids.Length; ++i)
+        foreach (string guid in AssetDatabase.FindAssets(filter))
         {
-            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
-            EditorUtility.DisplayProgressBar("Checking challenge", $"{progressPrefix} - {path}", progressRangeBase+i*progressPerItem);
-            issues_out.AddRange(GeneralChecks.GetConflicts(path));
+            yield return AssetDatabase.GUIDToAssetPath(guid);
+        }
+    }
+
+    private static void ExecTests_CheckForConflicts(IReadOnlyList<string> paths, List<ReportedIssue> issues_out, string progressPrefix, float progressRangeBase, float progressRangeMax)
+    {
+        float progressPerItem = paths.Count/(progressRangeMax-progressRangeBase);
+        EditorUtility.DisplayProgressBar("Checking challenge", $"{progressPrefix} - looking for files...", progressRangeBase);
+
+        for (int i = 0; i < paths.Count; ++i)
+        {
+            EditorUtility.DisplayProgressBar("Checking challenge", $"{progressPrefix} - {paths[i]}", progressRangeBase+i*progressPerItem);
+
+            issues_out.AddRange(GeneralChecks.GetConflicts(paths[i]));
         }
     }
 }
