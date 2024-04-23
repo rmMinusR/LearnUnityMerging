@@ -30,7 +30,7 @@ When finished, each has a tool inside of Unity where you can check your work. On
 ## Two objects created on the same line
 
 **Scenario**: The team's designer has been placing NPCs in the level. The artist has placed props into the level, and they need to merge.
-Your task: merge `same-line-add/props` into `same-line-add/main`
+Your task: merge `same-line-add/player-art` into `same-line-add/main`
 
 ## Object created on the same line as object deleted
 
