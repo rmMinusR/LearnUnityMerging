@@ -29,13 +29,13 @@ When finished, each has a tool inside of Unity where you can check your work. On
 
 ## Two objects created on the same line
 
-**Scenario**: The team's designer has been placing NPCs in the level. The artist has placed props into the level, and they need to merge.
+**Scenario**: After having set up the player prefab, the team's programmer then went to implement camera control. At the same time, the artist added the character model and animations.
 Your task: merge `same-line-add/player-art` into `same-line-add/main`
 
 ## Object created on the same line as object deleted
 
-**Scenario**: The team's designer has been adding and removing more NPCs in the level. The artist has placed more props into the level, and they need to merge.
-Your task: merge `same-line-add-remove/props` into `same-line-add-remove/main`
+**Scenario**: The team's designer made a blockout. The character artist has replaced placeholder NPCs with their models, but the environment artist has fleshed out the level and merged that into main first.
+Your task: merge `same-line-add-remove/level-art` into `same-line-add-remove/main`
 
 ## Decimals nearly the same
 
