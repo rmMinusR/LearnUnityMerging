@@ -1,0 +1,253 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93bd2d83b23d06f459ab8a6c3f5c9977, type: 3}
+  m_Name: CHALLENGE
+  m_EditorClassIdentifier: 
+  displayName: Same-line add+delete
+  branches: []
+  guidsRequired: 
+  guidsBanned: 
+  assetContentConstraints:
+  - asset: {fileID: 102900000, guid: 791f4b42b14f1c741b33a1fd30940fce, type: 3}
+    localIdsRequired: '1
+
+      2
+
+      3
+
+      4
+
+      14780606
+
+      14780607
+      stripped
+
+      27568334
+
+      27568335 stripped
+
+      44203230
+
+      44203231
+
+      62192940
+
+      62192941
+      stripped
+
+      199552336
+
+      199552337 stripped
+
+      206398079
+
+      206398080
+      stripped
+
+      232237516
+
+      232237517 stripped
+
+      265919647
+
+      265919648
+      stripped
+
+      299559073
+
+      299559074 stripped
+
+      315671248
+
+      315671249
+      stripped
+
+      366842967
+
+      366842968
+
+      455758761
+
+      455758762
+      stripped
+
+      481554576
+
+      481554577 stripped
+
+      500161909
+
+      513619876
+
+      513619877
+
+      513619878
+
+      513619879
+
+      513619880
+
+      579495563
+
+      579495564
+      stripped
+
+      589411145 stripped
+
+      687578901
+
+      687578902 stripped
+
+      718902145
+
+      718902146
+
+      718902147
+
+      729154948
+
+      764329615
+
+      764329616
+
+      764329617
+
+      764329618
+
+      764329619
+
+      823897338
+
+      823897339
+
+      828814296
+
+      828814297
+      stripped
+
+      859203433
+
+      859203434 stripped
+
+      872176440
+
+      872176441
+      stripped
+
+      905451319
+
+      905451320 stripped
+
+      982951341
+
+      982951342
+      stripped
+
+      1055942244
+
+      1055942245
+
+      1094848868
+
+      1094848869
+      stripped
+
+      1107507482
+
+      1107507483 stripped
+
+      1109295433
+
+      1109295434
+      stripped
+
+      1124128451
+
+      1124128452
+
+      1226339561
+
+      1226339562
+      stripped
+
+      1404004186
+
+      1404004187 stripped
+
+      1407485270
+
+      1407485271
+      stripped
+
+      1416173229
+
+      1416173230
+
+      1416881162
+
+      1416881163
+      stripped
+
+      1552716752
+
+      1552716753 stripped
+
+      1663912023
+
+      1663912024
+      stripped
+
+      1744962814
+
+      1744962815 stripped
+
+      1842099422
+
+      1842099423
+      stripped
+
+      1898114875
+
+      1898114876
+
+      1940952728
+
+      1940952729
+      stripped
+
+      1978239737
+
+      1978239738 stripped
+
+      1987254698
+
+      1987254699
+      stripped
+
+      2024705986
+
+      2024705987 stripped
+
+      2042400144
+
+      2042400145
+
+      2055128707
+
+      2055128708
+
+      2066825021
+
+      2066825022
+
+      1287980312931742970'
+    localIdsBanned: 
